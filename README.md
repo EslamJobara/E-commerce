@@ -1,5 +1,33 @@
 # E-Commerce API
 
+## Setup للمطورين الجدد
+
+### 1. Clone المشروع
+```bash
+git clone <repo-url>
+cd E-commerce
+npm install
+```
+
+### 2. تشغيل MongoDB محلياً
+- نصّب MongoDB من [mongodb.com](https://www.mongodb.com/try/download/community)
+- أو استخدم Docker:
+```bash
+docker run -d -p 27017:27017 --name mongodb mongo
+```
+
+### 3. تشغيل المشروع
+```bash
+npm run dev
+```
+
+ملف `.env.development` موجود بالفعل مع إعدادات localhost.
+
+### 4. الوصول للـ API Documentation
+افتح المتصفح على: `http://localhost:3000/api-docs`
+
+---
+
 ## Deployment على Render
 
 ### الخطوات المطلوبة:
@@ -11,7 +39,7 @@
 4. في Database Access: أنشئ مستخدم جديد مع username و password
 5. في Network Access: أضف `0.0.0.0/0` للسماح بالوصول من أي مكان
 6. اضغط على "Connect" واختر "Connect your application"
-7. انسخ الـ connection string (سيكون شكله: `mongodb+srv://username:password@cluster.mongodb.net/database-name`)
+7. انسخ الـ connection string
 
 #### 2. رفع المشروع على Render
 1. ارفع الكود على GitHub
@@ -29,6 +57,7 @@
 في صفحة الـ Web Service، اذهب لـ "Environment" وأضف:
 
 ```
+NODE_ENV=production
 PORT=3000
 MONGO_URL=mongodb+srv://username:password@cluster.mongodb.net/E-commerce
 JWT_SECRET=your_strong_secret_key_here
@@ -38,14 +67,14 @@ CLOUDINARY_API_KEY=your_cloudinary_api_key
 CLOUDINARY_API_SECRET=your_cloudinary_api_secret
 ```
 
+**مهم:** لازم تضيف `NODE_ENV=production` عشان Render يستخدم Environment Variables بدل الملف المحلي.
+
 #### 4. Deploy
 اضغط "Create Web Service" وانتظر حتى يكتمل الـ deployment
 
 ---
 
-## تشغيل محلي
+## ملاحظات
 
-```bash
-npm install
-npm run dev
-```
+- `.env.development` مرفوع على Git وفيه إعدادات localhost فقط
+- Production يستخدم Environment Variables من Render Dashboard (أكثر أماناً)

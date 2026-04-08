@@ -24,7 +24,7 @@ const bootStrap = async (app, express) => {
     app.use("/api/category", categoryRouter)
 
 
-    app.all("*", (req, res, next) => {
+    app.all("/*", (req, res, next) => {
         return next(new Error("Not found Handler !!!!", { cause: 404 }))
     })
 
