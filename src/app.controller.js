@@ -1,11 +1,20 @@
 import connectDb from "./DB/connectDB.js";
 import globalErrorHandler from "./Utlis/errorHandler.utlis.js"
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import authRouter from "./Modules/auth/auth.controller.js"
 import productRouter from "./Modules/Product/product.controller.js"
 import categoryRouter from "./Modules/Category/categort.controller.js"
 
 const bootStrap = async (app, express) => {
+    // CORS - Allow all origins
+    app.use(cors({
+        origin: '*',
+        credentials: true,
+        methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+        allowedHeaders: ['Content-Type', 'Authorization']
+    }))
+
     app.use(express.json())
     app.use(cookieParser());
 
