@@ -8,6 +8,8 @@ const __dirname = path.dirname(__filename)
 dotenv.config({ path: path.join(__dirname, "src/config/.env") })
 
 import express from "express"
+import swaggerUi from 'swagger-ui-express'
+import swaggerSpec from './swagger.config.js'
 import bootStrap from "./src/app.controller.js"
 
 const app = express()
@@ -15,6 +17,15 @@ const port = process.env.PORT || 3000
 
 await bootStrap(app, express)
 
-app.listen(port, () => console.log(`Server app listening on port ${port}!`))
+// Swagger Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'E-Commerce API Docs'
+}))
+
+app.listen(port, () => {
+  console.log(`Server app listening on port ${port}!`)
+  console.log(`📚 API Documentation available at http://localhost:${port}/api-docs`)
+})
 
 export default app;
