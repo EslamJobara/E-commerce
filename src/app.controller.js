@@ -11,13 +11,21 @@ const bootStrap = async (app, express) => {
 
     await connectDb()
 
+    // Root endpoint
+    app.get("/", (req, res) => {
+        res.json({ 
+            message: "E-Commerce API is running",
+            documentation: "/api-docs"
+        })
+    })
+
     app.use("/api/auth", authRouter)
     app.use("/api/product", productRouter)
     app.use("/api/category", categoryRouter)
 
 
-    app.all("/*dummy", (req, res, next) => {
-        return next(new Error("Not found Handler !!!!", { cause: 409 }))
+    app.all("*", (req, res, next) => {
+        return next(new Error("Not found Handler !!!!", { cause: 404 }))
     })
 
     app.use(globalErrorHandler)
