@@ -67,7 +67,7 @@ router.post("/createCategory", authentication, categoryService.createCategory)
  *       401:
  *         description: غير مصرح
  */
-router.get("/getAllCategory", authentication, categoryService.getAllCategory)
+router.get("/getAllCategory", categoryService.getAllCategory)
 
 /**
  * @swagger

@@ -4,7 +4,7 @@ const orderSchema = new mongoose.Schema(
     {
         user: {
             type: mongoose.Schema.Types.ObjectId,
-            ref: "User",
+            ref: "users",
             required: true,
         },
 
@@ -19,6 +19,8 @@ const orderSchema = new mongoose.Schema(
                     type: Number,
                     required: true,
                 },
+                variationId: { type: String }, // هنخزن فيه الـ ID بتاع الـ variation
+                _id: { type: Boolean, default: true }
             },
         ],
 

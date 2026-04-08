@@ -157,4 +157,11 @@ router.post("/login", authServeice.login)
 router.get("/getAlluser", authentication, authorization({ role: ["admin"] }), authServeice.getAllUsers)
 
 
+router.get("/getMyProfile", authentication, authServeice.getMyProfile)
+
+
+
+
+
+
 export default router
