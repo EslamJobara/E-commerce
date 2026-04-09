@@ -1,6 +1,6 @@
 import { Router } from "express";
-import * as cartService from "./cart.service.js"
-import { authentication, authorization } from "../../Middelwares/auth.middlewares.js";
+import * as cartService from "./cart.service.js";
+import { authentication } from "../../Middelwares/auth.middlewares.js";
 
 
 const router = Router()
