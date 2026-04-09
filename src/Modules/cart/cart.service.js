@@ -42,34 +42,56 @@ export const addToCart = async (req, res, next) => {
 };
 
 export const removeFromCart = async (req, res, next) => {
-    const { productId, variationId } = req.body;
+    const { productId, variationId, removeAll } = req.body;
     const userId = req.user._id;
 
-    const cart = await CartModel.findOneAndUpdate(
-        { user: userId },
-        {
-            $pull: {
-                items: {
-                    product: productId,
-                    ...(variationId && { variationId })
-                }
-            }
-        },
-        { new: true }
-    ).populate({
-        path: "items.product",
-        model: "Product",
-        select: "name price"
-    });
-
+    const cart = await CartModel.findOne({ user: userId });
+    
     if (!cart) {
         return next(new Error("Cart not found", { cause: 404 }));
     }
 
+    const itemIndex = cart.items.findIndex(item =>
+        item.product.toString() === productId &&
+        (!variationId || item.variationId?.toString() === variationId?.toString())
+    );
+
+    if (itemIndex === -1) {
+        return next(new Error("Item not found in cart", { cause: 404 }));
+    }
+
+    if (removeAll || cart.items[itemIndex].quantity <= 1) {
+        // حذف المنتج بالكامل
+        cart.items.splice(itemIndex, 1);
+    } else {
+        // تقليل الكمية بواحد
+        cart.items[itemIndex].quantity -= 1;
+    }
+
+    await cart.save();
+
+    const updatedCart = await CartModel.findOne({ user: userId })
+        .populate({
+            path: "items.product",
+            model: "Product",
+            select: "name price variations"
+        });
+
+    // فلترة الـ variations
+    const cartObj = updatedCart.toObject();
+    cartObj.items = cartObj.items.map(item => {
+        if (item.variationId && item.product && item.product.variations) {
+            item.product.variations = item.product.variations.filter(
+                v => v._id.toString() === item.variationId.toString()
+            );
+        }
+        return item;
+    });
+
     return successResponse({
         res,
         message: "Item removed from cart successfully",
-        data: cart
+        data: cartObj
     });
 };
 
@@ -87,9 +109,20 @@ export const getMyCart = async (req, res, next) => {
         return next(new Error("Cart is empty or not found", { cause: 404 }));
     }
 
+    // فلترة الـ variations حسب الـ variationId المختار
+    const cartObj = cart.toObject();
+    cartObj.items = cartObj.items.map(item => {
+        if (item.variationId && item.product && item.product.variations) {
+            item.product.variations = item.product.variations.filter(
+                v => v._id.toString() === item.variationId.toString()
+            );
+        }
+        return item;
+    });
+
     // حساب السعر الإجمالي
     let totalPrice = 0;
-    cart.items.forEach(item => {
+    cartObj.items.forEach(item => {
         if (item.product) {
             totalPrice += item.product.price * item.quantity;
         }
@@ -99,7 +132,7 @@ export const getMyCart = async (req, res, next) => {
         res,
         message: "Cart fetched successfully",
         data: {
-            ...cart.toObject(),
+            ...cartObj,
             totalPrice
         }
     });

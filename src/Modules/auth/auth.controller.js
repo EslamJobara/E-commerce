@@ -154,7 +154,7 @@ router.post("/login", validation(loginValidation), authServeice.login)
  *       404:
  *         description: لا يوجد مستخدمين
  */
-router.get("/getAlluser", authentication, authorization({ role: ["admin"] }), authServeice.getAllUsers)
+router.get("/getAlluser", authentication, authorization("admin"), authServeice.getAllUsers)
 
 /**
  * @swagger
@@ -219,6 +219,6 @@ router.get("/getMyProfile", authentication, authServeice.getMyProfile)
  *       404:
  *         description: المستخدم غير موجود
  */
-router.get("/getUserById/:id", authentication, authorization({ role: ["admin"] }), authServeice.getUserById)
+router.get("/getUserById/:id", authentication, authorization("admin"), authServeice.getUserById)
 
 export default router

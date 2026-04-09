@@ -29,11 +29,16 @@ export const authentication = async (req, res, next) => {
     }
 }
 
-export const authorization = ({ role = [] }) => {
+export const authorization = (...allowedRoles) => {
     return async (req, res, next) => {
-        if (!role.includes(req.user.role)) {
-            return next(new Error("Unauthorized", { cause: 403 }))
+        if (!req.user) {
+            return next(new Error("User not authenticated", { cause: 401 }));
         }
-        return next()
+
+        if (!allowedRoles.includes(req.user.role)) {
+            return next(new Error("Forbidden - You don't have permission to access this resource", { cause: 403 }));
+        }
+        
+        return next();
     }
 }

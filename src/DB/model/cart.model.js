@@ -3,21 +3,28 @@ import mongoose from "mongoose";
 const cartSchema = new mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "users" // تأكد أن اسم الموديل هنا مطابق للي سجلته في User model
+        ref: "users",
+        required: true
     },
 
     items: [
         {
             product: {
                 type: mongoose.Schema.Types.ObjectId,
-                ref: "Product"
+                ref: "Product",
+                required: true
             },
 
             quantity: {
                 type: Number,
-                default: 1
+                default: 1,
+                min: 1
             },
-            variationId: { type: String }
+            
+            variationId: { 
+                type: mongoose.Schema.Types.ObjectId,
+                required: false 
+            }
         }
     ]
 

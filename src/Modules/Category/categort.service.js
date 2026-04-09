@@ -17,10 +17,13 @@ export const createCategory = async (req, res, next) => {
 
 export const getAllCategory = async (req, res, next) => {
     const category = await CategoryModel.find()
-    if (category.length === 0) {
-        return next(new Error("categorys Not Founded", { cause: 409 }))
-    }
-    return successResponse({ res, statusCode: 200, message: "successfully", data: category })
+    // Return empty array if no categories found (not an error)
+    return successResponse({ 
+        res, 
+        statusCode: 200, 
+        message: "successfully", 
+        data: category 
+    })
 }
 
 export const getCategoryById = async (req, res, next) => {

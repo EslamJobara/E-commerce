@@ -1,4 +1,16 @@
 const globalErrorHandler = (err, req, res, next) => {
+    // Log errors (especially in production)
+    if (process.env.NODE_ENV === 'production') {
+        console.error('Error:', {
+            message: err.message,
+            stack: err.stack,
+            timestamp: new Date().toISOString(),
+            path: req.path,
+            method: req.method,
+            user: req.user?._id
+        });
+    }
+
     // CORS headers are already handled by cors middleware
     // Only add them here if they're missing (edge cases)
     if (!res.getHeader('Access-Control-Allow-Origin')) {
