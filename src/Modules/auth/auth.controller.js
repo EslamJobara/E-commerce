@@ -156,7 +156,31 @@ router.post("/login", authServeice.login)
  */
 router.get("/getAlluser", authentication, authorization({ role: ["admin"] }), authServeice.getAllUsers)
 
-
+/**
+ * @swagger
+ * /api/auth/getMyProfile:
+ *   get:
+ *     summary: الحصول على بيانات المستخدم الحالي
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: بيانات المستخدم
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       401:
+ *         description: غير مصرح - Token مطلوب
+ *       404:
+ *         description: المستخدم غير موجود
+ */
 router.get("/getMyProfile", authentication, authServeice.getMyProfile)
 
 

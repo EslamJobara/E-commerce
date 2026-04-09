@@ -13,6 +13,8 @@ const router = Router()
  *   post:
  *     summary: إنشاء منتج جديد مع Variations وصور
  *     tags: [Product]
+ *     security:
+ *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -39,7 +41,7 @@ const router = Router()
  *                 example: 507f1f77bcf86cd799439011
  *               variations:
  *                 type: string
- *                 description: "مصفوفة الـ variations محولة لـ String (JSON)"
+ *                 description: "مصفوفة الـ variations محولة لـ String (JSON). مثال: [{'colorName':'Red','stock':10}]"
  *                 example: '[{"colorName":"Black","colorValue":"#000000","stock":50}]'
  *               variant_image_0:
  *                 type: string
@@ -54,8 +56,9 @@ const router = Router()
  *         description: تم إنشاء المنتج بنجاح
  *       400:
  *         description: خطأ في البيانات المدخلة
+ *       401:
+ *         description: غير مصرح - Token مطلوب
  */
-
 router.post("/createProduct", fileUpload().any(), productService.createProducts)
 
 /**
