@@ -33,7 +33,7 @@ export const login = async (req, res, next) => {
         return next(new Error("Invalid password", { cause: 400 }))
     }
     const accessToken = signToken({
-        payload: { _id: user._id }, options: {
+        payload: { _id: user._id, role: user.role }, options: {
             expiresIn: "1d",
             issuer: "Sakanly",
             subject: "Authentication",
@@ -41,30 +41,45 @@ export const login = async (req, res, next) => {
     })
 
     const refreshToken = signToken({
-        payload: { _id: user._id }, options: {
+        payload: { _id: user._id, role: user.role }, options: {
             expiresIn: "7d",
             issuer: "Sakanly",
             subject: "Authentication",
         }
     })
 
-    res.cookie("accessToken", accessToken, {
+    // Cookie settings محسّنة للـ CORS
+    const isProduction = process.env.NODE_ENV === "production";
+    const cookieOptions = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 24 * 60 * 60 * 1000, // 1 يوم
+        secure: isProduction, // HTTPS only في production
+        sameSite: isProduction ? "none" : "lax", // ⬅️ التعديل المهم: none للـ cross-origin
+        maxAge: 24 * 60 * 60 * 1000,
         path: "/"
-    })
+    };
+
+    res.cookie("accessToken", accessToken, cookieOptions);
 
     res.cookie("refreshToken", refreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 أيام
-        path: "/"
+        ...cookieOptions,
+        maxAge: 7 * 24 * 60 * 60 * 1000 // 7 أيام
     });
 
-    return successResponse({ res, statusCode: 200, message: "Login Successfully", data: { accessToken, refreshToken } })
+    return successResponse({ 
+        res, 
+        statusCode: 200, 
+        message: "Login Successfully", 
+        data: { 
+            accessToken, 
+            refreshToken,
+            user: {
+                _id: user._id,
+                email: user.email,
+                fullName: user.fullName,
+                role: user.role
+            }
+        } 
+    })
 }
 
 export const getAllUsers = async (req, res, next) => {
