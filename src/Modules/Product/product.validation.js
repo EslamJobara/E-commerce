@@ -54,7 +54,8 @@ export const updateProductSchema = Joi.object({
     category: Joi.string().pattern(/^[0-9a-fA-F]{24}$/).optional(),
     variations: Joi.array().items(variationSchema).min(1).optional(),
     featured: Joi.boolean().optional(),
-    visible: Joi.boolean().optional()
+    visible: Joi.boolean().optional(),
+    isDeleted: Joi.boolean().optional()
 }).min(1).messages({
     'object.min': 'At least one field must be provided for update'
 });

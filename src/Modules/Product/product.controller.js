@@ -315,6 +315,10 @@ router.get("/getProductById/:id", validation(mongoIdSchema, 'params'), productSe
  *               visible:
  *                 type: boolean
  *                 example: true
+ *               isDeleted:
+ *                 type: boolean
+ *                 description: حذف منطقي للمنتج (soft delete)
+ *                 example: true
  *     responses:
  *       200:
  *         description: تم التحديث بنجاح
