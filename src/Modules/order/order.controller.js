@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { authentication, authorization } from "../../Middelwares/auth.middlewares.js";
 import { validation } from "../../Middelwares/validation.middelwares.js";
-import { createOrderSchema, mongoIdSchema, getAllOrdersQuerySchema } from "./order.validation.js";
+import { createOrderSchema, mongoIdSchema, getAllOrdersQuerySchema, updateOrderStatusSchema } from "./order.validation.js";
 import * as orderService from "./order.service.js"
 
 const router = Router()
@@ -356,3 +356,43 @@ router.get("/getUserOrders", authentication, orderService.getUserOrders)
 router.get("/getAllOrders", authentication, authorization("admin"), orderService.getAllOrders)
 
 export default router
+
+
+/**
+ * @swagger
+ * /api/order/updateOrderStatus/{id}:
+ *   patch:
+ *     summary: تحديث حالة الطلب (للـ Admin فقط)
+ *     tags: [Order]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: معرف الطلب
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, processing, shipped, delivered, cancelled]
+ *     responses:
+ *       200:
+ *         description: تم تحديث حالة الطلب بنجاح
+ *       401:
+ *         description: غير مصرح
+ *       403:
+ *         description: غير مسموح - Admin فقط
+ *       404:
+ *         description: الطلب غير موجود
+ */
+router.patch("/updateOrderStatus/:id", authentication, authorization("admin"), validation(mongoIdSchema, 'params'), validation(updateOrderStatusSchema), orderService.updateOrderStatus)

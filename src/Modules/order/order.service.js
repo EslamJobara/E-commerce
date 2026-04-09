@@ -5,7 +5,7 @@ import UserModel from "../../DB/model/User.model.js";
 
 
 export const createOrder = async (req, res, next) => {
-    const { items } = req.body; // اليوزر هيبعت [{ product, quantity, variationId }]
+    const { items, shippingDetails, paymentMethod } = req.body;
     const userId = req.user._id;
 
     let finalItems = [];
@@ -15,21 +15,17 @@ export const createOrder = async (req, res, next) => {
         const product = await ProductModel.findById(item.product);
         if (!product) return next(new Error("Product not found"));
 
-        // 1. لو اليوزر مختار variation معين
         if (item.variationId) {
             const variation = product.variations.find(v => v._id.toString() === item.variationId);
 
             if (!variation) return next(new Error("Variation not found"));
 
-            // التأكد من الـ stock بتاع الـ variation
             if (variation.stock < item.quantity) {
                 return next(new Error(`Only ${variation.stock} left for this color/size`));
             }
 
-            // خصم من الـ stock بتاع الـ variation
             variation.stock -= item.quantity;
         } else {
-            // لو مفيش variation (منتج بسيط)، نخصم من الـ stock العام
             if (product.stock < item.quantity) return next(new Error("Out of stock"));
             product.stock -= item.quantity;
         }
@@ -38,7 +34,7 @@ export const createOrder = async (req, res, next) => {
         finalItems.push({
             product: product._id,
             quantity: item.quantity,
-            variationId: item.variationId // نسيف الـ ID عشان نعرف اليوزر اختار إيه
+            variationId: item.variationId
         });
 
         await product.save();
@@ -47,7 +43,9 @@ export const createOrder = async (req, res, next) => {
     const order = await OrderModel.create({
         user: userId,
         items: finalItems,
-        totalPrice
+        totalPrice,
+        shippingDetails,
+        paymentMethod: paymentMethod || "cash"
     });
 
     return successResponse({ res, data: order });
@@ -145,4 +143,26 @@ export const getAllOrders = async (req, res, next) => {
     } catch (error) {
         return next(error);
     }
+};
+
+export const updateOrderStatus = async (req, res, next) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const order = await OrderModel.findById(id);
+    if (!order) return next(new Error("Order not found"));
+
+    order.status = status;
+
+    if (status === "delivered") {
+        order.paymentStatus = "paid";
+    }
+
+    await order.save();
+
+    return successResponse({
+        res,
+        message: "Order status updated successfully",
+        data: order
+    });
 };

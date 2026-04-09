@@ -40,6 +40,20 @@ const orderSchema = new mongoose.Schema(
             enum: ["paid", "unpaid"],
             default: "unpaid",
         },
+
+        shippingDetails: {
+            fullName: { type: String, required: true },
+            streetAddress: { type: String, required: true },
+            city: { type: String, required: true },
+            postalCode: { type: String, required: true },
+            phoneNumber: { type: String, required: true },
+        },
+
+        paymentMethod: {
+            type: String,
+            enum: ["cash", "card", "online"],
+            default: "cash",
+        },
     },
     { timestamps: true }
 );

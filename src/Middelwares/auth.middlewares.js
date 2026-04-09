@@ -9,13 +9,21 @@ export const authentication = async (req, res, next) => {
         return next(new Error("Token required!", { cause: 401 }));
     }
 
-    // Remove "Bearer " prefix if exists
     if (token.startsWith('Bearer ')) {
         token = token.slice(7);
     }
 
+    if (!token || token === 'null' || token === 'undefined') {
+        return next(new Error("Token required!", { cause: 401 }));
+    }
+
     try {
         const decoded = verifyTokin({ token });
+        
+        if (!decoded || !decoded._id) {
+            return next(new Error("Invalid Token", { cause: 401 }));
+        }
+
         const user = await UserModel.findById(decoded._id);
 
         if (!user) {
