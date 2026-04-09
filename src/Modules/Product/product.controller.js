@@ -319,11 +319,15 @@ router.get("/getProductById/:id", validation(mongoIdSchema, 'params'), productSe
  * @swagger
  * /api/product/updateProduct/{id}:
  *   patch:
- *     summary: تحديث منتج
+ *     summary: تحديث منتج مع إمكانية رفع صور جديدة
  *     description: |
- *       تحديث بيانات منتج موجود (يمكن تحديث أي حاجة بما فيها الـ variations).
+ *       تحديث بيانات منتج موجود مع إمكانية رفع صور جديدة للـ variations.
  *       
- *       **ملاحظة:** يمكنك تحديث أي field بما فيها الـ variations كاملة أو جزء منها
+ *       **ملاحظات:**
+ *       - استخدم `multipart/form-data` لرفع الصور
+ *       - يمكنك تحديث أي field بما فيها الـ variations
+ *       - لو عايز ترفع صورة جديدة لـ variation معين، استخدم: `variation_0_defaultImage` أو `variation_0_image_0`
+ *       - لو مش عايز ترفع صورة، ابعت الـ variations كـ JSON string مع اللينكات القديمة
  *     tags: [Product]
  *     parameters:
  *       - in: path
@@ -336,7 +340,7 @@ router.get("/getProductById/:id", validation(mongoIdSchema, 'params'), productSe
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -353,25 +357,23 @@ router.get("/getProductById/:id", validation(mongoIdSchema, 'params'), productSe
  *                 type: string
  *                 example: 507f1f77bcf86cd799439011
  *               variations:
- *                 type: array
- *                 description: تحديث الـ variations (اختياري)
- *                 items:
- *                   type: object
- *                   properties:
- *                     colorName:
- *                       type: string
- *                     colorValue:
- *                       type: string
- *                     defaultImage:
- *                       type: string
- *                     variationImgs:
- *                       type: array
- *                       items:
- *                         type: string
- *                     isDefault:
- *                       type: boolean
- *                     stock:
- *                       type: number
+ *                 type: string
+ *                 description: |
+ *                   مصفوفة الـ variations بصيغة JSON string (اختياري).
+ *                   لو عايز ترفع صورة جديدة، ما تحطش defaultImage في الـ JSON، وارفع الصورة كـ file
+ *                 example: '[{"colorName":"أسود","colorValue":"#000000","stock":50,"isDefault":true}]'
+ *               variation_0_defaultImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: صورة جديدة للـ variation الأول (اختياري)
+ *               variation_0_image_0:
+ *                 type: string
+ *                 format: binary
+ *                 description: صورة إضافية جديدة للـ variation الأول (اختياري)
+ *               variation_1_defaultImage:
+ *                 type: string
+ *                 format: binary
+ *                 description: صورة جديدة للـ variation الثاني (اختياري)
  *               featured:
  *                 type: boolean
  *                 example: true
@@ -400,7 +402,7 @@ router.get("/getProductById/:id", validation(mongoIdSchema, 'params'), productSe
  *       400:
  *         description: خطأ في البيانات المدخلة
  */
-router.patch("/updateProduct/:id", validation(mongoIdSchema, 'params'), validation(updateProductSchema), productService.updateProduct)
+router.patch("/updateProduct/:id", fileUpload().any(), validation(mongoIdSchema, 'params'), productService.updateProduct)
 
 /**
  * @swagger
