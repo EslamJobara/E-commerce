@@ -1,6 +1,6 @@
 import { Router } from "express";
 import * as authServeice from "./auth.service.js"
-import { signUpValidation } from "./auth.validation.js";
+import { signUpValidation, loginValidation } from "./auth.validation.js";
 import { validation } from "../../Middelwares/validation.middelwares.js";
 import { authentication, authorization } from "../../Middelwares/auth.middlewares.js";
 
@@ -123,7 +123,7 @@ router.post("/signUp", validation(signUpValidation), authServeice.signUp)
  *       400:
  *         description: كلمة المرور غير صحيحة
  */
-router.post("/login", authServeice.login)
+router.post("/login", validation(loginValidation), authServeice.login)
 
 /**
  * @swagger
@@ -156,12 +156,69 @@ router.post("/login", authServeice.login)
  */
 router.get("/getAlluser", authentication, authorization({ role: ["admin"] }), authServeice.getAllUsers)
 
-
+/**
+ * @swagger
+ * /api/auth/getMyProfile:
+ *   get:
+ *     summary: الحصول على بيانات المستخدم الحالي
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: بيانات المستخدم
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       401:
+ *         description: غير مصرح - Token مطلوب
+ *       404:
+ *         description: المستخدم غير موجود
+ */
 router.get("/getMyProfile", authentication, authServeice.getMyProfile)
 
-
-
-
-
+/**
+ * @swagger
+ * /api/auth/getUserById/{id}:
+ *   get:
+ *     summary: الحصول على معلومات مستخدم بواسطة ID (Admin فقط)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *           pattern: '^[0-9a-fA-F]{24}$'
+ *         description: معرف المستخدم (MongoDB ObjectId)
+ *         example: 507f1f77bcf86cd799439011
+ *     responses:
+ *       200:
+ *         description: معلومات المستخدم
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *       401:
+ *         description: غير مصرح - Token مطلوب
+ *       403:
+ *         description: ليس لديك صلاحية Admin
+ *       404:
+ *         description: المستخدم غير موجود
+ */
+router.get("/getUserById/:id", authentication, authorization({ role: ["admin"] }), authServeice.getUserById)
 
 export default router

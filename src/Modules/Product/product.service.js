@@ -1,67 +1,68 @@
 import successResponse from "../../Utlis/successResponse.utlis.js";
 import ProductModel from "../../DB/model/product.model.js"
-import cloudinary from "../../config/cloudinary.js"
-import streamifier from "streamifier";
-
-const uploadToCloudinary = (fileBuffer) => {
-    return new Promise((resolve, reject) => {
-        const stream = cloudinary.uploader.upload_stream(
-            { folder: "ecommerce_products" },
-            (error, result) => {
-                if (error) return reject(error);
-                resolve(result.secure_url);
-            }
-        );
-        streamifier.createReadStream(fileBuffer).pipe(stream);
-    });
-};
 
 export const createProducts = async (req, res, next) => {
-    let { name, description, price, category, variations } = req.body;
+    try {
+        let { name, description, price, category, variations } = req.body;
 
-    let parsedVariations = [];
-    if (variations) {
-        try {
-            parsedVariations = typeof variations === 'string' ? JSON.parse(variations) : variations;
-        } catch (error) {
-            return next(new Error("Invalid variations format. Expected a JSON array."));
+        // Validation: التأكد من وجود variations
+        if (!variations || !Array.isArray(variations) || variations.length === 0) {
+            return next(new Error("At least one variation is required", { cause: 400 }));
         }
-    }
 
-    let totalStock = 0;
-    const finalVariations = [];
-
-    if (Array.isArray(parsedVariations)) {
-        for (let i = 0; i < parsedVariations.length; i++) {
-            let variant = parsedVariations[i];
-
-            totalStock += (Number(variant.stock) || 0);
-
-            if (req.files) {
-                const targetFile = req.files.find(f => f.fieldname === `variant_image_${i}`);
-                if (targetFile) {
-                    variant.defaultImg = await uploadToCloudinary(targetFile.buffer);
-                }
+        // معالجة كل variation
+        const finalVariations = variations.map((variant, i) => {
+            // Validation: التأكد من البيانات الأساسية
+            if (!variant.colorName || !variant.colorValue || !variant.defaultImage) {
+                throw new Error(`Variation ${i}: colorName, colorValue, and defaultImage are required`);
             }
-            finalVariations.push(variant);
+
+            // Validation: التأكد من صحة الـ hexa code
+            const hexaPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+            if (!hexaPattern.test(variant.colorValue)) {
+                throw new Error(`Variation ${i}: Invalid hexa code format for colorValue`);
+            }
+
+            return {
+                colorName: variant.colorName.trim(),
+                colorValue: variant.colorValue.trim().toUpperCase(),
+                defaultImage: variant.defaultImage,
+                variationImgs: variant.variationImgs || [],
+                isDefault: variant.isDefault === true,
+                stock: Number(variant.stock) || 0
+            };
+        });
+
+        // التأكد من وجود variation واحد على الأقل isDefault
+        const hasDefault = finalVariations.some(v => v.isDefault === true);
+        if (!hasDefault) {
+            finalVariations[0].isDefault = true;
         }
+
+        // التأكد من وجود default واحد فقط
+        const defaultCount = finalVariations.filter(v => v.isDefault).length;
+        if (defaultCount > 1) {
+            return next(new Error("Only one variation can be set as default", { cause: 400 }));
+        }
+
+        // إنشاء المنتج (الـ stock هيتحسب تلقائياً في الـ pre-save middleware)
+        const newProduct = await ProductModel.create({
+            name,
+            description,
+            price,
+            category,
+            variations: finalVariations
+        });
+
+        return successResponse({
+            res,
+            statusCode: 201,
+            message: "Product Created Successfully",
+            data: newProduct
+        });
+    } catch (error) {
+        return next(error);
     }
-
-    const newProduct = await ProductModel.create({
-        name,
-        description,
-        price,
-        category,
-        variations: finalVariations,
-        stock: totalStock
-    });
-
-    return successResponse({
-        res,
-        statusCode: 201,
-        message: "Product Created Successfully",
-        data: newProduct
-    });
 };
 
 export const getAllProducts = async (req, res, next) => {
@@ -83,12 +84,68 @@ export const getProductById = async (req, res, next) => {
 
 
 export const updateProduct = async (req, res, next) => {
-    const { id } = req.params
-    const product = await ProductModel.findOneAndUpdate({ _id: id }, { $set: { ...req.body } }, { new: true })
-    if (!product) {
-        return next(new Error("product Not Founded", { cause: 409 }))
+    try {
+        const { id } = req.params;
+        const updateData = { ...req.body };
+
+        // لو في variations في الـ update، نعالجها
+        if (updateData.variations && Array.isArray(updateData.variations)) {
+            const finalVariations = updateData.variations.map((variant, i) => {
+                // Validation: التأكد من البيانات الأساسية
+                if (!variant.colorName || !variant.colorValue || !variant.defaultImage) {
+                    throw new Error(`Variation ${i}: colorName, colorValue, and defaultImage are required`);
+                }
+
+                // Validation: التأكد من صحة الـ hexa code
+                const hexaPattern = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
+                if (!hexaPattern.test(variant.colorValue)) {
+                    throw new Error(`Variation ${i}: Invalid hexa code format for colorValue`);
+                }
+
+                return {
+                    colorName: variant.colorName.trim(),
+                    colorValue: variant.colorValue.trim().toUpperCase(),
+                    defaultImage: variant.defaultImage,
+                    variationImgs: variant.variationImgs || [],
+                    isDefault: variant.isDefault === true,
+                    stock: Number(variant.stock) || 0
+                };
+            });
+
+            // التأكد من وجود variation واحد على الأقل isDefault
+            const hasDefault = finalVariations.some(v => v.isDefault === true);
+            if (!hasDefault) {
+                finalVariations[0].isDefault = true;
+            }
+
+            // التأكد من وجود default واحد فقط
+            const defaultCount = finalVariations.filter(v => v.isDefault).length;
+            if (defaultCount > 1) {
+                return next(new Error("Only one variation can be set as default", { cause: 400 }));
+            }
+
+            updateData.variations = finalVariations;
+        }
+
+        const product = await ProductModel.findOneAndUpdate(
+            { _id: id }, 
+            { $set: updateData }, 
+            { new: true, runValidators: true }
+        );
+
+        if (!product) {
+            return next(new Error("product Not Founded", { cause: 409 }));
+        }
+
+        return successResponse({ 
+            res, 
+            statusCode: 200, 
+            message: "product Update successffully", 
+            data: product 
+        });
+    } catch (error) {
+        return next(error);
     }
-    return successResponse({ res, statusCode: 200, message: "product Update successffully", data: product })
 }
 
 export const deleteProduct = async (req, res, next) => {

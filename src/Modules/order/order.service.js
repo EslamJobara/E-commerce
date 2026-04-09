@@ -108,3 +108,41 @@ export const getUserOrders = async (req, res, next) => {
         data: ordersObj
     });
 };
+
+export const getAllOrders = async (req, res, next) => {
+    try {
+        // جلب جميع الطلبات بدون فلاتر
+        const orders = await OrderModel.find()
+            .populate("user", "name email phone")
+            .populate({
+                path: "items.product",
+                model: "Product",
+                select: "name price variations"
+            })
+            .sort({ createdAt: -1 });
+
+        // معالجة الـ variations
+        const ordersObj = orders.map(order => {
+            const orderData = order.toObject();
+
+            orderData.items = orderData.items.map(item => {
+                if (item.variationId && item.product && item.product.variations) {
+                    item.product.variations = item.product.variations.filter(
+                        v => v._id.toString() === item.variationId.toString()
+                    );
+                }
+                return item;
+            });
+
+            return orderData;
+        });
+
+        return successResponse({
+            res,
+            message: "All orders fetched successfully",
+            data: ordersObj
+        });
+    } catch (error) {
+        return next(error);
+    }
+};
