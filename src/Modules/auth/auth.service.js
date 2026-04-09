@@ -77,3 +77,19 @@ export const getAllUsers = async (req, res, next) => {
 
 
 //get detials of user 
+
+export const getMyProfile = async (req, res, next) => {
+    const userId = req.user._id;
+
+    const user = await UserModel.findById(userId);
+
+    if (!user) {
+        return next(new Error("User not found", { cause: 404 }));
+    }
+
+    return successResponse({
+        res,
+        message: "Your profile fetched successfully",
+        data: user
+    });
+};
