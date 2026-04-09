@@ -355,9 +355,6 @@ router.get("/getUserOrders", authentication, orderService.getUserOrders)
  */
 router.get("/getAllOrders", authentication, authorization("admin"), orderService.getAllOrders)
 
-export default router
-
-
 /**
  * @swagger
  * /api/order/updateOrderStatus/{id}:
@@ -396,3 +393,5 @@ export default router
  *         description: الطلب غير موجود
  */
 router.patch("/updateOrderStatus/:id", authentication, authorization("admin"), validation(mongoIdSchema, 'params'), validation(updateOrderStatusSchema), orderService.updateOrderStatus)
+
+export default router
