@@ -9,38 +9,52 @@ import orderRouter from "./Modules/order/order.controller.js"
 import cartRouter from "./Modules/cart/cart.controller.js"
 
 const bootStrap = async (app, express) => {
-    // CORS - Enhanced configuration
+    // CORS Configuration
+    // Define allowed origins (يمكنك تخصيصها حسب احتياجك)
+    const allowedOrigins = [
+        'http://localhost:3000',
+        'http://localhost:3001',
+        'http://localhost:5173', // Vite default
+        'http://localhost:5174',
+        'http://localhost:4200',
+        'https://e-commerce-a6cz.onrender.com',
+        // أضف الـ frontend domains هنا
+    ];
+
     app.use(cors({
         origin: function (origin, callback) {
-            // Allow requests with no origin (like mobile apps or curl requests)
+            // Allow requests with no origin (mobile apps, Postman, curl)
             if (!origin) return callback(null, true);
             
-            // Allow all origins in development/production
-            return callback(null, true);
+            // في الـ development، اسمح لكل الـ origins
+            if (process.env.NODE_ENV !== 'production') {
+                return callback(null, true);
+            }
+            
+            // في الـ production، تحقق من الـ origin
+            if (allowedOrigins.includes(origin)) {
+                return callback(null, true);
+            } else {
+                return callback(new Error('Not allowed by CORS'));
+            }
         },
-        credentials: true,
+        credentials: true, // للسماح بإرسال cookies
         methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-        allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+        allowedHeaders: [
+            'Content-Type', 
+            'Authorization', 
+            'X-Requested-With', 
+            'Accept',
+            'Origin'
+        ],
         exposedHeaders: ['Content-Range', 'X-Content-Range'],
-        maxAge: 86400 // 24 hours
-    }))
+        maxAge: 86400, // 24 hours - cache preflight requests
+        optionsSuccessStatus: 200 // للتوافق مع المتصفحات القديمة
+    }));
 
-    // Additional CORS headers middleware
-    app.use((req, res, next) => {
-        res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
-        res.header('Access-Control-Allow-Credentials', 'true');
-        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept');
-        
-        // Handle preflight
-        if (req.method === 'OPTIONS') {
-            return res.sendStatus(200);
-        }
-        next();
-    })
-
-    app.use(express.json())
-    app.use(express.urlencoded({ extended: true }));
+    // Body parsers
+    app.use(express.json({ limit: '10mb' })); // حد أقصى لحجم الـ JSON
+    app.use(express.urlencoded({ extended: true, limit: '10mb' }));
     app.use(cookieParser());
 
     await connectDb()
