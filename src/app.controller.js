@@ -67,7 +67,7 @@ const bootStrap = async (app, express) => {
 
   // 404 handler - must be after all routes
   app.use((req, res, next) => {
-    return next(new Error("Not found Handler !!!!", { cause: 404 }));
+    return next(new Error("API Route Not Found - Check your URL", { cause: 404 }));
   });
 
   app.use(globalErrorHandler);
