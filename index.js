@@ -25,15 +25,10 @@ if (process.env.NODE_ENV !== 'production') {
 }
 
 
-console.log('🚀 Loading dependencies...');
 import express from "express"
-console.log('✅ Express loaded');
 import swaggerUi from 'swagger-ui-express'
-console.log('✅ Swagger UI loaded');
 import swaggerSpec from './swagger.config.js'
-console.log('✅ Swagger Spec loaded');
 import bootStrap from "./src/app.controller.js"
-console.log('✅ Bootstrap loaded');
 
 const app = express()
 const port = process.env.PORT || 3000
@@ -46,11 +41,8 @@ if (swaggerSpec && Object.keys(swaggerSpec).length > 0) {
   }))
 }
 
-
 // Bootstrap (Synchronous route registration)
-console.log('🚀 Initializing app...');
 bootStrap(app, express)
-console.log('✅ App initialized');
 
 // Only start the server if not running on Vercel
 if (!process.env.VERCEL) {
@@ -62,6 +54,7 @@ if (!process.env.VERCEL) {
 } else {
   console.log(`🚀 App ready for Vercel`);
 }
+
 
 export default app;
 
