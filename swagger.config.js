@@ -479,7 +479,17 @@ const options = {
       },
     ],
   },
-  apis: ['./src/Modules/**/*.controller.js', './src/Modules/**/*.validation.js'],
+  apis: [
+    path.join(__dirname, './src/Modules/**/*.controller.js'),
+    path.join(__dirname, './src/Modules/**/*.validation.js')
+  ],
 };
 
-export default swaggerJsdoc(options);
+let swaggerSpec = {};
+try {
+  swaggerSpec = swaggerJsdoc(options);
+} catch (error) {
+  console.error('⚠️ Swagger initialization failed:', error.message);
+}
+
+export default swaggerSpec;

@@ -20,10 +20,13 @@ const app = express()
 const port = process.env.PORT || 3000
 
 // Swagger Documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-  customCss: '.swagger-ui .topbar { display: none }',
-  customSiteTitle: 'E-Commerce API Docs'
-}))
+if (swaggerSpec && Object.keys(swaggerSpec).length > 0) {
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+    customCss: '.swagger-ui .topbar { display: none }',
+    customSiteTitle: 'E-Commerce API Docs'
+  }))
+}
+
 
 // Bootstrap (Synchronous route registration)
 bootStrap(app, express)
