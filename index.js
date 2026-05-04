@@ -1,3 +1,13 @@
+// Global Error Handling for Vercel debugging
+process.on('uncaughtException', (err) => {
+  console.error('💥 UNCAUGHT EXCEPTION:', err.message);
+  console.error(err.stack);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('💥 UNHANDLED REJECTION:', reason);
+});
+
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
@@ -5,11 +15,15 @@ import { fileURLToPath } from "url"
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
-// Load .env.development only in local development
+// Load .env only if not in production
 if (process.env.NODE_ENV !== 'production') {
-  const envFile = path.join(__dirname, 'src/config/.env.development')
-  dotenv.config({ path: envFile })
+  try {
+    dotenv.config();
+  } catch (e) {
+    console.log('No local .env file found');
+  }
 }
+
 
 import express from "express"
 import swaggerUi from 'swagger-ui-express'
