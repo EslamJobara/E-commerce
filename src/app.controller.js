@@ -9,20 +9,14 @@ import categoryRouter from "./Modules/Category/categort.controller.js";
 import orderRouter from "./Modules/order/order.controller.js";
 import cartRouter from "./Modules/cart/cart.controller.js";
 
-const bootStrap = async (app, express) => {
-  // CORS Configuration - allow all origins globally
+const bootStrap = (app, express) => {
+  // CORS Configuration
   app.use(
     cors({
       origin: true,
       credentials: true,
       methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-      allowedHeaders: [
-        "Content-Type",
-        "Authorization",
-        "X-Requested-With",
-        "Accept",
-        "Origin",
-      ],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
       exposedHeaders: ["Content-Range", "X-Content-Range"],
       maxAge: 86400,
       optionsSuccessStatus: 200,
@@ -32,22 +26,20 @@ const bootStrap = async (app, express) => {
   app.options("*", cors());
 
   // Body parsers
-  app.use(express.json({ limit: "10mb" })); // حد أقصى لحجم الـ JSON
+  app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
   app.use(cookieParser());
 
-  await connectDb();
+  // Connect to DB (don't await here to avoid blocking route registration)
+  connectDb().catch(err => console.error("Initial DB Connection Error:", err.message));
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {
-    const healthCheck = {
-      uptime: process.uptime(),
+    res.status(200).json({
       status: "OK",
-      timestamp: Date.now(),
-      database:
-        mongoose.connection.readyState === 1 ? "connected" : "disconnected",
-    };
-    res.status(200).json(healthCheck);
+      database: mongoose.connection.readyState === 1 ? "connected" : "connecting/disconnected",
+      timestamp: new Date().toISOString()
+    });
   });
 
   // Root endpoint
@@ -59,19 +51,19 @@ const bootStrap = async (app, express) => {
     });
   });
 
-
   app.use("/api/auth", authRouter);
   app.use("/api/product", productRouter);
   app.use("/api/category", categoryRouter);
   app.use("/api/order", orderRouter);
   app.use("/api/cart", cartRouter);
 
-  // 404 handler - must be after all routes
+  // 404 handler
   app.use((req, res, next) => {
     return next(new Error("API Route Not Found - Check your URL", { cause: 404 }));
   });
 
   app.use(globalErrorHandler);
 };
+
 
 export default bootStrap;
