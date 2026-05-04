@@ -15,11 +15,11 @@ const connectDb = async () => {
 
     } catch (error) {
         console.error("❌ Database connection Error:", error.message);
-        // في production، لو فشل الاتصال بالـ DB، أوقف السيرفر
+        // في production، لو فشل الاتصال بالـ DB، ارمي الـ error عشان Vercel يظهرها في الـ logs
         if (process.env.NODE_ENV === 'production') {
-            console.error("Exiting process due to database connection failure");
-            process.exit(1);
+            console.error("Database connection failure detected in production");
         }
+
         throw error; // رمي الـ error عشان الـ bootstrap يعرف في مشكلة
     }
 }

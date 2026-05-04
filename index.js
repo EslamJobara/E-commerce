@@ -29,14 +29,18 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 try {
   await bootStrap(app, express)
   
-  app.listen(port, '0.0.0.0', () => {
-    console.log(`✅ Server running on port ${port}`)
-    console.log(`📚 API Docs: http://localhost:${port}/api-docs`)
-    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
-  })
+  // Only start the server if not running on Vercel
+  if (!process.env.VERCEL) {
+    app.listen(port, '0.0.0.0', () => {
+      console.log(`✅ Server running on port ${port}`)
+      console.log(`📚 API Docs: http://localhost:${port}/api-docs`)
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
+    })
+  } else {
+    console.log(`🚀 App initialized for Vercel serverless environment`)
+  }
 } catch (error) {
   console.error('❌ Failed to start server:', error.message)
-  process.exit(1)
 }
 
 export default app;
