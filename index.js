@@ -35,17 +35,20 @@ const port = process.env.PORT || 3000
 
 // Swagger Documentation
 if (swaggerSpec && Object.keys(swaggerSpec).length > 0) {
-  const CSS_URL = "https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css";
-  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
-    customCss: '.swagger-ui .topbar { display: none } ' + 
-               `@import url("${CSS_URL}");`,
-    customSiteTitle: 'E-Commerce API Docs',
+  const options = {
+    customCssUrl: [
+      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui.min.css',
+      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.min.css',
+    ],
     customJs: [
       'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-bundle.js',
-      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.js'
-    ]
+      'https://cdnjs.cloudflare.com/ajax/libs/swagger-ui/5.0.0/swagger-ui-standalone-preset.js',
+    ],
+    customSiteTitle: 'E-Commerce API Docs',
+    customCss: '.swagger-ui .topbar { display: none }',
+  };
+  app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, options));
 
-  }))
 
 }
 
