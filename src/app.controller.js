@@ -38,8 +38,8 @@ const bootStrap = async (app, express) => {
 
   await connectDb();
 
-  // Health check endpoint (مهم لـ Render)
-  app.get("/health", (req, res) => {
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
     const healthCheck = {
       uptime: process.uptime(),
       status: "OK",
@@ -51,13 +51,14 @@ const bootStrap = async (app, express) => {
   });
 
   // Root endpoint
-  app.get("/", (req, res) => {
+  app.get("/api", (req, res) => {
     res.json({
       message: "E-Commerce API is running",
       documentation: "/api-docs",
-      health: "/health",
+      health: "/api/health",
     });
   });
+
 
   app.use("/api/auth", authRouter);
   app.use("/api/product", productRouter);
