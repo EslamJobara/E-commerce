@@ -51,7 +51,7 @@ const bootStrap = async (app, express) => {
   });
 
   // Root endpoint
-  app.get("/api", (req, res) => {
+  app.get("/", (req, res) => {
     res.json({
       message: "E-Commerce API is running",
       documentation: "/api-docs",
