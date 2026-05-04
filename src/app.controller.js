@@ -23,15 +23,22 @@ const bootStrap = (app, express) => {
     }),
   );
 
-
+  // Middleware to ensure DB connection before processing any request
+  // This is essential for serverless environments like Vercel
+  app.use(async (req, res, next) => {
+    try {
+      await connectDb();
+      next();
+    } catch (err) {
+      console.error("Critical DB Connection Error in Middleware:", err.message);
+      res.status(500).json({ error: "Database connection failed", message: err.message });
+    }
+  });
 
   // Body parsers
   app.use(express.json({ limit: "10mb" }));
   app.use(express.urlencoded({ extended: true, limit: "10mb" }));
   app.use(cookieParser());
-
-  // Connect to DB (don't await here to avoid blocking route registration)
-  connectDb().catch(err => console.error("Initial DB Connection Error:", err.message));
 
   // Health check endpoint
   app.get("/api/health", (req, res) => {
@@ -64,6 +71,5 @@ const bootStrap = (app, express) => {
 
   app.use(globalErrorHandler);
 };
-
 
 export default bootStrap;
